@@ -9,9 +9,17 @@ import numpy as np
 from PIL import Image
 from translate import Translator
 
+# import module.txt2img as t2i
 import keras_cv
 import matplotlib.pyplot as plt
-import os
+import os, glob
+
+import torch
+from torch import autocast
+from diffusers import StableDiffusionPipeline
+
+model_id = "CompVis/stable-diffusion-v1-4"
+device = "cuda"
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 translator = Translator(from_lang="ko", to_lang="en")
@@ -38,11 +46,27 @@ def react_to_flask():
     print(text)
     translation = translator.translate(text)
     file_name = './test.jpg'
+    pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token=True)
+    pipe = pipe.to(device)
+
+    prompt = translation
+    with autocast("cuda"):
+        image = pipe(prompt, guidance_scale=7.5).images[0]  
+    
+    rm_forder()
+    image.save("static/" + str(translation) + ".jpg")
+
     return {
         "success": True,
-        "img_url" : "http://localhost:5000/static/test.jpg",
+        "img_url" : "http://localhost:5000/static/" + str(translation) + ".jpg",
         "translation" : translation
     }
+
+def rm_forder():
+    dir = 'static'
+    filelist = glob.glob(os.path.join(dir, "*"))
+    for f in filelist:
+        os.remove(f)
 
 if __name__ == '__main__':  
     app.debug = True
