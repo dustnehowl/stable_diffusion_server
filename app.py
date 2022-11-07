@@ -17,6 +17,7 @@ import os, glob
 import torch
 from torch import autocast
 from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionImg2ImgPipeline
 
 model_id = "CompVis/stable-diffusion-v1-4"
 device = "cuda"
@@ -39,13 +40,31 @@ def home():
 @app.route('/img2img', methods=["POST"])
 def react_to_flask2():
     print("img2img style transfer")
-    print(request.files.get("file"))
+    parsed_request = request.files.get('file')
     fileName = request.form.get("fileName")
     text = request.form.get("prompt")
     translation = translator.translate(text)
+    prompt = translation
+    prompt = "A fantasy landscape, trending on artstation"
+
+    filePath = "./static2/"
+    filePath += fileName
+    parsed_request.save(filePath)
+
+    device = "cuda"
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+        model_id, use_auth_token=True
+    ).to(device)
+
+    init_image = Image.open("./static2/test.png") 
+    init_image = init_image.resize((512, 512))
+
+    images = pipe(prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5).images
+    images[0].save("static/" + str(translation) + ".jpg")
 
     return {
         "success": True,
+        "img_url" : "http://localhost:5000/static/" + str(translation) + ".jpg",
         "translation" : translation
     }
 
@@ -58,10 +77,10 @@ def react_to_flask():
         break
     print(text)
     translation = translator.translate(text)
+    prompt = translation
+
     pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token=True)
     pipe = pipe.to(device)
-
-    prompt = translation
     with autocast("cuda"):
         image = pipe(prompt, guidance_scale=7.5).images[0]  
     
