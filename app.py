@@ -36,6 +36,19 @@ def home():
 
 @cross_origin()
 
+@app.route('/img2img', methods=["POST"])
+def react_to_flask2():
+    print("img2img style transfer")
+    print(request.files.get("file"))
+    fileName = request.form.get("fileName")
+    text = request.form.get("prompt")
+    translation = translator.translate(text)
+
+    return {
+        "success": True,
+        "translation" : translation
+    }
+
 @app.route('/text2img', methods=["POST"])
 def react_to_flask():
     print("텍스트를 받습니다.")
@@ -45,7 +58,6 @@ def react_to_flask():
         break
     print(text)
     translation = translator.translate(text)
-    file_name = './test.jpg'
     pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token=True)
     pipe = pipe.to(device)
 
@@ -70,4 +82,4 @@ def rm_forder():
 
 if __name__ == '__main__':  
     app.debug = True
-    app.run('0.0.0.0',port=5000,debug=True)
+    app.run('127.0.0.1',port=5000,debug=True)
