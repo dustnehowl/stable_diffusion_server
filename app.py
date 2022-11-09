@@ -45,7 +45,6 @@ def react_to_flask2():
     text = request.form.get("prompt")
     translation = translator.translate(text)
     prompt = translation
-    prompt = "A fantasy landscape, trending on artstation"
 
     filePath = "./static2/"
     filePath += fileName
