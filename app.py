@@ -13,6 +13,7 @@ from translate import Translator
 import keras_cv
 import matplotlib.pyplot as plt
 import os, glob
+import random
 
 import torch
 from torch import autocast
@@ -58,12 +59,13 @@ def react_to_flask2():
     init_image = Image.open("./static2/test.png") 
     init_image = init_image.resize((512, 512))
 
+    serial = str(random.randint(0, 1000))
     images = pipe(prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5).images
-    images[0].save("static/" + str(translation) + ".jpg")
+    images[0].save("static/" + str(translation) + serial + ".jpg")
 
     return {
         "success": True,
-        "img_url" : "http://localhost:5000/static/" + str(translation) + ".jpg",
+        "img_url" : "http://localhost:5000/static/" + str(translation) + serial + ".jpg",
         "translation" : translation
     }
 
@@ -83,12 +85,14 @@ def react_to_flask():
     with autocast("cuda"):
         image = pipe(prompt, guidance_scale=7.5).images[0]  
     
+    serial = str(random.randint(0, 1000))
+
     rm_forder()
-    image.save("static/" + str(translation) + ".jpg")
+    image.save("static/" + str(translation) + serial + ".jpg")
 
     return {
         "success": True,
-        "img_url" : "http://localhost:5000/static/" + str(translation) + ".jpg",
+        "img_url" : "http://localhost:5000/static/" + str(translation) + serial + ".jpg",
         "translation" : translation
     }
 
